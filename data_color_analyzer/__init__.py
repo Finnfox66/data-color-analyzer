@@ -5,10 +5,13 @@ from pyciede2000 import ciede2000
 
 from data_color_analyzer.colortools import pyciede, colorconvert
 from data_color_analyzer.viewtools import scrollframe
+from data_color_analyzer.color_pipeline import ColorPipeline
 
 def main():
     myPyciede = pyciede
     myPyciede.test()
+
+    colorPipeline = ColorPipeline('Schmitz2015', 'ciede2000')
 
     root = tk.Tk()
     root.title('Data color analyzer')

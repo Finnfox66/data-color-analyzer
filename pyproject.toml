@@ -9,6 +9,7 @@ readme = "README.md"
 gui = "data_color_analyzer:main"
 
 [tool.poetry.dependencies]
+numpy = "2.1.1"
 python = "^3.10"
 pyciede2000 = "^0.0.21"
 ttkthemes = "^3.2.2"
