@@ -4,10 +4,10 @@ Python script for analyzing data colors
 
 ## Setup
 
-``
+```sh
 poetry install
 poetry run gui
-``
+```
 
 ## Sources
 
