@@ -5,11 +5,13 @@ description = ""
 authors = ["Finnfox66 <36104337+Finnfox66@users.noreply.github.com>"]
 readme = "README.md"
 
+[tool.poetry.scripts]
+gui = "data_color_analyzer:main"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 pyciede2000 = "^0.0.21"
 ttkthemes = "^3.2.2"
-
 
 [build-system]
 requires = ["poetry-core"]
