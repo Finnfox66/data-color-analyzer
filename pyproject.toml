@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "data-color-analyzer"
+version = "0.1.0"
+description = ""
+authors = ["Finnfox66 <36104337+Finnfox66@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyciede2000 = "^0.0.21"
+ttkthemes = "^3.2.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
