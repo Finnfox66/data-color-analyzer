@@ -15,3 +15,6 @@ https://ixora.io/projects/colorblindness/color-blindness-simulation-research/
 
 "Exploring Color Math Through Color Blindness"
 https://dev.to/ndesmic/exploring-color-math-through-color-blindness-2m2h
+
+
+Note for Joel: python command is "py" (pip) not "python" (python -m pip)
