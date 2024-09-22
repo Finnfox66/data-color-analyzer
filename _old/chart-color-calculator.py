@@ -8,7 +8,7 @@ import platform
 # Slider foor root hue
 
 root = tk.Tk()
-root.title("Chart color test")
+root.title('Chart color test')
 
 # set up all input variables
 onOff1 = tk.IntVar()
@@ -41,22 +41,22 @@ class ScrollableFrame(ttk.Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
         canvas = tk.Canvas(self, width=canvasWidth, height=canvasHeight)
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        scrollbar = ttk.Scrollbar(self, orient='vertical', command=canvas.yview)
         self.scrollable_frame = ttk.Frame(canvas)
 
         self.scrollable_frame.bind(
-            "<Configure>",
+            '<Configure>',
             lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
+                scrollregion=canvas.bbox('all')
             )
         )
 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor='nw')
 
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
 
 
 frame=ScrollableFrame(root)
@@ -96,7 +96,7 @@ def getLuminocityFromRgb(rgb):
 # CONTENT
 
 # get luminosity for canvas
-# cut off the "#"
+# cut off the '#'
 lightBgString = lightBg[1:]
 darkBgString = darkBg[1:]
 # convert to tuple (255, 255, 255)
@@ -107,7 +107,7 @@ lightBgLum = getLuminocityFromRgb(lightBgTuple)
 darkBgLum = getLuminocityFromRgb(darkBgTuple)
 
 def createColors():
-    canvas.delete("all")
+    canvas.delete('all')
     if onOff1.get() == 1:
         canvas.configure(bg=darkBg)
     else:
@@ -133,8 +133,8 @@ def createColors():
             saturation = scaleSaturation[y]
             lightness = scaleLightness[y]
             
-            hsl = {"hue": hue, "saturation": saturation, "lightness": lightness}
-            rgb = cs.hls_to_rgb(hsl["hue"], hsl["lightness"], hsl["saturation"])
+            hsl = {'hue': hue, 'saturation': saturation, 'lightness': lightness}
+            rgb = cs.hls_to_rgb(hsl['hue'], hsl['lightness'], hsl['saturation'])
             r = int(rgb[0]*255)
             g = int(rgb[1]*255)
             b = int(rgb[2]*255)
@@ -183,27 +183,27 @@ def createColors():
 # UI
 
 frame1 = ttk.Frame(frame.scrollable_frame)
-frame1.pack(side="top")
+frame1.pack(side='top')
 checkBox1 = tk.Checkbutton(frame1, text='Dark mode',variable=onOff1, onvalue=1, offvalue=0, command=createColors, height=2)
 checkBox2 = tk.Checkbutton(frame1, text='Contrast only',variable=onOff2, onvalue=1, offvalue=0, command=createColors, height=2)
 checkBox3 = tk.Checkbutton(frame1, text='Show text',variable=onOff3, onvalue=1, offvalue=0, command=createColors, height=2)
-checkBox1.pack(side="left")
-checkBox2.pack(side="left")
-checkBox3.pack(side="left")
+checkBox1.pack(side='left')
+checkBox2.pack(side='left')
+checkBox3.pack(side='left')
 # checkBox1.grid(row=0, column=0)
 # checkBox1.grid(row=0, column=1)
 # checkBox1.grid(row=0, column=2)
 
 frame2 = ttk.Frame(frame.scrollable_frame)
-frame2.pack(side="top")
-tk.Label(frame2, text="root color:").pack(side="left")
-textBox = tk.Entry(frame2, textvariable=rootColor, width=15).pack(side="left")
-tk.Button(frame2, text="Refresh", command=createColors).pack(side="left")
+frame2.pack(side='top')
+tk.Label(frame2, text='root color:').pack(side='left')
+textBox = tk.Entry(frame2, textvariable=rootColor, width=15).pack(side='left')
+tk.Button(frame2, text='Refresh', command=createColors).pack(side='left')
 
 frame3 = ttk.Frame(frame.scrollable_frame)
-frame3.pack(side="top")
+frame3.pack(side='top')
 canvas = tk.Canvas(frame3, width = canvasWidth, height = canvasHeight, bg=lightBg)
-canvas.pack(side="left")
+canvas.pack(side='left')
 # canvas.grid(row=1, column=0)
 
 createColors()

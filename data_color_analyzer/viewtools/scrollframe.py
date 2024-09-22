@@ -5,9 +5,9 @@ from tkinter import ttk
 
 class ScrollableFrame(ttk.Frame):
 
-    def __init__(self, container, *args, **kwargs):
+    def __init__(self, container, width, height, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
-        canvas = tk.Canvas(self, width=1000, height=800)
+        canvas = tk.Canvas(self, width=width, height=height)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
         self.scrollable_frame = ttk.Frame(canvas)
 
