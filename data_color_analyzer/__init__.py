@@ -12,6 +12,8 @@ def helloWorld():
 
 def main():
     colorPipeline = ColorPipeline('Schmitz2015', 'ciede2000')
+    colorPipeline.set_color_blindness_levels(0, 0, 0)
+    print(colorPipeline.get_color_difference((0, 0, 0), (0, 0, 1)))
 
     #-------------------------------------------------
     # WINDOW

@@ -1,4 +1,6 @@
+import numpy as np
 from pyciede2000 import ciede2000
+from skimage import color
 
 class Ciede2000:
     """
@@ -30,4 +32,20 @@ class Ciede2000:
         """
 
     def get_color_difference(a: (float, float, float), b: (float, float, float)):
-        ciede2000(a, b)
+        """
+        Get a difference score for two colors.
+        :param a: The first color as (r, g, b).
+        :param b: The second color as (r, g, b).
+        """
+
+        # Convert colors from [0, 1] to [0, 255]
+        a_arr = np.array(a) * 255.0
+        b_arr = np.array(b) * 255.0
+
+        # Convert the colors to the Lab color representation
+        colors = np.array([[a_arr, b_arr]], dtype=np.uint8)
+        colors_lab = color.rgb2lab(colors)
+
+        data = ciede2000(tuple(colors_lab[0][0]), tuple(colors_lab[0][1]))
+        result = data['delta_E_00']
+        return result / 100
