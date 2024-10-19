@@ -1,15 +1,37 @@
 import colorsys as cs
 
-def hexToRgb(hexColorVar):
-    hexColor = hexColorVar.get()
-    hexColor = hexColor.lstrip('#')
-    return tuple(int(hexColor[i:i+2], 16) for i in (0, 2, 4))
+#def hex_var_to_rgb(hex_color_var):
+#    hex_color = hex_color_var.get()
+#    hex_color = hex_color.lstrip('#')
+#    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
-def rgbToHue(rgb):
+# This function assumes that the code doesn't have a hashtag
+def hex_to_rgb(hex):
+    """
+    Converts a hex into rgb.
+    :param hex_code: Color hex code without a hashtag.
+    """
+    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    """
+    Converts a rgb into hex without a hashtag.
+    """
+    return '{:02x}{:02x}{:02x}'.format(rgb[0], rgb[1], rgb[2])
+
+def rgb_to_hls(rgb):
     hsl = cs.rgb_to_hls(rgb[0], rgb[1], rgb[2])
-    return hsl[0]
+    return hsl
+
+def hls_to_rgb(hls):
+    rgb = cs.hls_to_rgb(hls[0], hls[1], hls[2])
+    return rgb
+
+def normalize_rgb(rgb):
+    normalized_rgb = [rgb[0]/255, rgb[1]/255, rgb[2]/255]
+    return normalized_rgb
     
-def rgbToLuminosity(rgb):
+def rgb_to_luminosity(rgb):
     # convert to sRGB with relative luminance
     srgb = [rgb[0]/255, rgb[1]/255, rgb[2]/255]
     rgb2 = [0, 0, 0]
