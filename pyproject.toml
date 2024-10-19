@@ -7,6 +7,7 @@ readme = "README.md"
 
 [tool.poetry.scripts]
 gui = "data_color_analyzer:main"
+generate = "data_color_analyzer:generate"
 
 [tool.poetry.dependencies]
 numpy = "2.1.1"

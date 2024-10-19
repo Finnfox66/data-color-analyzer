@@ -1,3 +1,5 @@
+import sys
+import numpy as np
 import tkinter as tk
 from tkinter import ttk
 import colorsys as cs
@@ -6,9 +8,37 @@ from pyciede2000 import ciede2000
 from data_color_analyzer.colortools import colorconvert
 from data_color_analyzer.viewtools import scrollframe, ui_sections
 from data_color_analyzer.color_pipeline import ColorPipeline
+from data_color_analyzer.color_generator import ColorGenerator
 
 def helloWorld():
     print ("Hello world")
+
+def generate():
+    if len(sys.argv) <= 2:
+        print('Not enough arguments. Command:\n')
+        print ('\tpoetry run generate <generate_count> <initial_color_hex_1> [<inital_color_hex_2> ...]')
+        print('\nExamples:\n')
+        print ('\tpoetry run generate 3 "#0352fc"')
+        print ('\tpoetry run generate 12 "#0352fc" "#fc03f0" "#39fc03"')
+        print()
+        return
+
+    generate_count = int(sys.argv[1])
+    initial_colors = []
+    for idx in range(2, len(sys.argv)):
+        h = sys.argv[idx].lstrip('#')
+        initial_colors.append(tuple(int(h[i:i+2], 16) for i in (0, 2, 4)))
+
+    print(f"Generate count: {generate_count}")
+    print(f"Initial RGB colors: {initial_colors}")
+
+    normalized_colors = list(map(lambda x: tuple(np.array(x)/255), initial_colors))
+    print(f"Normalized RGB colors: {normalized_colors}")
+
+    color_pipeline = ColorPipeline('Schmitz2015', 'ciede2000')
+    color_generator = ColorGenerator(color_pipeline)
+
+    colors = color_generator.generate_colors(normalized_colors, generate_count)
 
 def main():
     colorPipeline = ColorPipeline('Schmitz2015', 'ciede2000')
