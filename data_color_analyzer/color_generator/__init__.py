@@ -1,5 +1,8 @@
 import numpy as np
+import math
 import colorsys
+import time
+import wcag_contrast_ratio as contrast
 
 from data_color_analyzer.color_pipeline import ColorPipeline
 
@@ -44,19 +47,24 @@ class ColorGenerator:
             raise Exception('The number of colors to generate can not be lower than one.')
 
         hsv_colors = list(map(
-            lambda x: colorsys.rgb_to_hsv(x[0], x[1], x[2]),
+            lambda x: colorsys.rgb_to_hsv(*x),
             initial_colors
         ))
 
         saturationSum = 0
         saturationCount = 0
 
+        has_black = False
+        has_white = False
+
         for hsv_color in hsv_colors:
             if hsv_color[2] <= 0:
                 self.log(f"Black color of HSV value {hsv_color} given as initial, skipping...")
+                has_black = True
                 continue
             if hsv_color[2] >= 1:
                 self.log(f"White color of HSV value {hsv_color} given as initial, skipping...")
+                has_white = True
                 continue
 
             saturationSum += hsv_color[1]
@@ -67,7 +75,58 @@ class ColorGenerator:
 
         targetSaturation = saturationSum / saturationCount
 
+        if not has_black:
+            hsv_colors.append((0.0, 0.0, 0.0))
+        if not has_white:
+            hsv_colors.append((0.0, 0.0, 1.0))
+
         self.log(f"Target saturation set to {targetSaturation}")
         self.log(f"Beginning generation of {generate_count} colors with initial HSV colors {hsv_colors}")
+
+        start_time = time.time()
+        diff_map = self.calculate_diff_map(hsv_colors, targetSaturation)
+        elapsed_seconds = time.time() - start_time
+        self.log(f"Diff map calculated in: {elapsed_seconds} seconds")
+
+    def calculate_diff_map(self, compare_hsv_colors: list[tuple[float, float, float]], targetSaturation: float) -> np.ndarray[np.float64]:
+        map = np.ones((256, 256))
+        saturation = int(round(targetSaturation * 255))
+
+        for hue in range(0, 256):
+            for value in range(0, 256):
+                hsv_color = tuple(np.array((hue, saturation, value)) / 255)
+                rgb_color = colorsys.hsv_to_rgb(*hsv_color)
+
+                # The color must have at least the minimum contrast to black and white
+                if contrast.rgb(rgb_color, (0.0, 0.0, 0.0)) < self.min_contrast_ratio:
+                    continue
+                if contrast.rgb(rgb_color, (1.0, 1.0, 1.0)) < self.min_contrast_ratio:
+                    continue
+
+                diff = self.get_hsv_rms_color_difference(hsv_color, compare_hsv_colors)
+                map[hue, value] = diff
+
+        return map
+
+    def get_hsv_rms_color_difference(self, hsv_color: tuple[float, float, float], compare_hsv_colors: list[tuple[float, float, float]]):
+        """
+        Calculates the root mean square (RMS) for the difference
+        values between the given color and the list of comparison colors.
+
+        :param hsv_color: The color to compare as (h, s, v) with values [0, 1].
+        :param compare_hsv_colors: The list of colors to compare as (h, s, v) with values [0, 1].
+        """
+
+        diff_square_sum = 0
+
+        rgb_color = colorsys.hsv_to_rgb(*hsv_color)
+
+        for compare_hsv_color in compare_hsv_colors:
+            compare_rgb_color = colorsys.hsv_to_rgb(*compare_hsv_color)
+
+            diff = self.color_pipeline.get_color_difference(rgb_color, compare_rgb_color)
+            diff_square_sum += diff * diff
+
+        return math.sqrt(diff_square_sum / len(compare_hsv_colors))
 
 
