@@ -5,6 +5,7 @@ import time
 import wcag_contrast_ratio as contrast
 
 from data_color_analyzer.color_pipeline import ColorPipeline
+from data_color_analyzer.color_generator.crawler import Crawler
 
 class ColorGenerator:
     def __init__(self, color_pipeline: ColorPipeline) -> None:
@@ -84,12 +85,14 @@ class ColorGenerator:
         self.log(f"Beginning generation of {generate_count} colors with initial HSV colors {hsv_colors}")
 
         start_time = time.time()
-        diff_map = self.calculate_diff_map(hsv_colors, targetSaturation)
+        # diff_map = self.calculate_diff_map(hsv_colors, targetSaturation)
+        potential_results = self.find_with_crawlers(hsv_colors, targetSaturation)
         elapsed_seconds = time.time() - start_time
         self.log(f"Diff map calculated in: {elapsed_seconds} seconds")
+        self.log(potential_results)
 
     def calculate_diff_map_simple(self, compare_hsv_colors: list[tuple[float, float, float]], targetSaturation: float) -> np.ndarray[np.float64]:
-        map = np.ones((256, 256))
+        map = np.zeros((256, 256))
         saturation = int(round(targetSaturation * 255))
 
         for hue in range(0, 256):
@@ -155,6 +158,62 @@ class ColorGenerator:
             diff_avg = diff_sum / diff_count
 
         return diff_maps[len(diff_maps) - 1]
+
+    def find_with_crawlers(self, compare_hsv_colors: list[tuple[float, float, float]], target_saturation: float):
+        diff_map = np.zeros((256, 256))
+
+        crawlers: list[tuple[int, int]] = []
+        for compare_hsv_color in compare_hsv_colors:
+            hue = int(round(compare_hsv_color[0] * 255))
+            value = int(round(compare_hsv_color[2] * 255))
+            crawlers.extend(self.get_new_crawlers((hue, value)))
+
+        results: list[tuple[float, float, float]] = []
+
+        while (len(crawlers) > 0):
+            crawler = crawlers.pop()
+            new_crawlers = self.get_new_crawlers(crawler)
+            better_found = False
+            for new_crawler in new_crawlers:
+                new_diff = diff_map[new_crawler[0], new_crawler[1]]
+                is_already_explored = new_diff != 0
+
+                if not is_already_explored:
+                    hsv_color = (new_crawler[0] / 255, target_saturation, new_crawler[1] / 255)
+                    rgb_color = colorsys.hsv_to_rgb(*hsv_color)
+
+                    # The color must have at least the minimum contrast to black and white
+                    if contrast.rgb(rgb_color, (0.0, 0.0, 0.0)) < self.min_contrast_ratio:
+                        continue
+                    if contrast.rgb(rgb_color, (1.0, 1.0, 1.0)) < self.min_contrast_ratio:
+                        continue
+
+                    new_diff = self.get_hsv_rms_color_difference(hsv_color, compare_hsv_colors)
+                    diff_map[new_crawler[0], new_crawler[1]] = new_diff
+
+                old_diff = diff_map[crawler[0], crawler[1]]
+
+                if new_diff > old_diff:
+                    if not is_already_explored:
+                        crawlers.append(new_crawler)
+                    better_found = True
+
+            if not better_found:
+                results.append((crawler[0] / 255, target_saturation, crawler[1] / 255))
+
+        return results
+
+    def get_new_crawlers(self, crawler: tuple[int, int]):
+        crawlers = []
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                new_x = crawler[0] + dx
+                new_y = crawler[1] + dy
+                if new_x >= 0 and new_x <= 255 and new_y >= 0 and new_y <= 255:
+                    crawlers.append((new_x, new_y))
+        return crawlers
 
     def get_hsv_rms_color_difference(self, hsv_color: tuple[float, float, float], compare_hsv_colors: list[tuple[float, float, float]]):
         """
