@@ -12,6 +12,15 @@ class ColorPipeline:
         self.set_color_blindness_levels(0, 0, 0)
 
     def set_color_blindness_levels(self, protanopia: float, deutranopia: float, tritanopia: float):
+        """
+        Sets the weights of the different color blindness levels
+        used for the color difference calculation.
+
+        :param protanopia: The weight of protanopia (unable to perceive red) color blindness, values [0, 1].
+        :param deutranopia: The weight of deutranopia (unable to perceive green) color blindness, values [0, 1].
+        :param tritanopia: The weight of tritanopia (unable to perceive blue) color blindness, values [0, 1].
+        """
+
         self.protanopia = protanopia
         self.deutranopia = deutranopia
         self.tritanopia = tritanopia
@@ -27,11 +36,12 @@ class ColorPipeline:
             self.color_blindness.lms_tritanopia_sim(self.tritanopia)
         )
 
-    def get_color_difference(self, a: (float, float, float), b: (float, float, float)) -> float:
+    def get_color_difference(self, a: tuple[float, float, float], b: tuple[float, float, float]) -> float:
         """
         Get a difference score for two colors simulated for color blindness.
-        :param a: The first color as (r, g, b).
-        :param b: The second color as (r, g, b).
+
+        :param a: The first color as (r, g, b) with values [0, 1].
+        :param b: The second color as (r, g, b) with values [0, 1].
         """
         a_rgb = np.array(a)
         b_rgb = np.array(b)

@@ -6,7 +6,20 @@ Python script for analyzing data colors
 
 ```sh
 poetry install
+```
+
+## Use
+
+To run the app in the GUI mode, run
+
+```sh
 poetry run gui
+```
+
+To generate a color set using the CLI, run
+
+```sh
+poetry run generate <generate_count> <initial_color_hex_1> [<inital_color_hex_2>, ...]
 ```
 
 ## Sources

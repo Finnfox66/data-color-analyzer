@@ -43,6 +43,7 @@ class Schmitz2015:
     def lms_protanopia_sim(degree: float = 1.0) -> np.ndarray:
         """
         Matrix for Simulating Protanopia colorblindness from LMS color-space.
+
         :param degree: Protanopia degree.
         """
         return np.array([[1 - degree, 1.05118294 * degree, -0.05116099 * degree],
@@ -53,6 +54,7 @@ class Schmitz2015:
     def lms_deutranopia_sim(degree: float = 1.0) -> np.ndarray:
         """
         Matrix for Simulating Deutranopia colorblindness from LMS color-space.
+
         :param degree: Deutranopia degree.
         """
         return np.array([[1, 0, 0],
@@ -63,6 +65,7 @@ class Schmitz2015:
     def lms_tritanopia_sim(degree: float = 1.0) -> np.ndarray:
         """
         Matrix for Simulating Tritanopia colorblindness from LMS color-space.
+
         :param degree: Tritanopia degree.
         """
         return np.array([[1, 0, 0],

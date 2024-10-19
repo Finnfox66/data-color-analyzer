@@ -31,11 +31,12 @@ class Ciede2000:
         }
         """
 
-    def get_color_difference(a: (float, float, float), b: (float, float, float)):
+    def get_color_difference(a: tuple[float, float, float], b: tuple[float, float, float]):
         """
         Get a difference score for two colors.
-        :param a: The first color as (r, g, b).
-        :param b: The second color as (r, g, b).
+
+        :param a: The first color as (r, g, b) with values [0, 1].
+        :param b: The second color as (r, g, b) with values [0, 1].
         """
 
         # Convert colors from [0, 1] to [0, 255]
