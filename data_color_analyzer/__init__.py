@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 import colorsys as cs
 from pyciede2000 import ciede2000
+import random
 
 from data_color_analyzer.colortools import colorconvert
 from data_color_analyzer.viewtools import scrollframe, ui_sections
@@ -59,16 +60,12 @@ def main():
     #-------------------------------------------------
     # CONTROL VARIABLES
 
-    intVar1 = tk.IntVar()
-    intVar2 = tk.IntVar()
-    stringVar1 = tk.StringVar()
-    onOff1 = tk.IntVar()
-    onOff2 = tk.IntVar()
-    onOff3 = tk.IntVar()
+    testStringVar1 = tk.StringVar()
 
     colorAmount = tk.StringVar()
     colorAmount.set("5")
 
+    colorPreviews = []
     colorCodes = []
     colorToggles = []
     colorHues = []
@@ -102,6 +99,7 @@ def main():
     def getRgbFromId(colorId):
         if (colorToggles[colorId].get()):
             # hsl
+            # TODO CHECK IF NONE OF THESE IS ""
             h = float(colorHues[colorId].get())
             l = float(colorLightnesses[colorId].get())
             s = float(colorSaturations[colorId].get())
@@ -109,14 +107,17 @@ def main():
             return colorconvert.hls_to_rgb(hls)
         else:
             #hex
+            # TODO CHECK IF NONE OF THESE IS ""
             return colorconvert.hex_to_rgb(colorCodes[colorId].get())
     
     def singleComparison(mon, di, tri, c1NormRgb, c2NormRgb):
         colorPipeline.set_color_blindness_levels(mon, di, tri)
-        return colorPipeline.get_color_difference(
+        result = colorPipeline.get_color_difference(
             (c1NormRgb[0], c1NormRgb[1], c1NormRgb[2]),
             (c2NormRgb[0], c2NormRgb[1], c2NormRgb[2])
         )
+        result = round(result, 2)
+        return result
 
     def compareTwoColors(id1, id2):
         c1NormRgb = colorconvert.normalize_rgb(getRgbFromId(id1))
@@ -126,102 +127,121 @@ def main():
         if (compareOrd.get() == 1):
             result = singleComparison(0, 0, 0, c1NormRgb, c2NormRgb)
             if (result < limit):
-                conflictList.append([id1, id2, f"ordinary {result}"])
+                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                conflictList.append([id1, id2, f"-", result, result_text_col])
         if (compareMono.get() == 1):
             result = singleComparison(1, 0, 0, c1NormRgb, c2NormRgb)
             if (result < limit):
-                conflictList.append([id1, id2, f"mono {result}"])
+                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                conflictList.append([id1, id2, f"Protanopia", result, result_text_col])
         if (compareDi.get() == 1):
             result = singleComparison(0, 1, 0, c1NormRgb, c2NormRgb)
             if (result < limit):
-                conflictList.append([id1, id2, f"di {result}"])
+                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                conflictList.append([id1, id2, f"Deutranopia", result, result_text_col])
         if (compareTri.get() == 1):
             result = singleComparison(0, 0, 1, c1NormRgb, c2NormRgb)
             if (result < limit):
-                conflictList.append([id1, id2, f"tri {result}"])
+                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                conflictList.append([id1, id2, f"Tritanopia", result, result_text_col])
 
     #-------------------------------------------------
     # UI BUILD FUNCTIONS (maybe separate to another file)
 
     def createColorInputs():
-        colorAmountInt = 0
-        try:
-            colorAmountInt = int(colorAmount.get())
+        # TODO Include color block for all color deficiencies
+        # TODO Needs function that stores old values first and restores them from old copies after.
+        colorAmountInt = int(colorAmount.get())
 
-            colorCodes.clear()
-            colorToggles.clear()
-            colorHues.clear()
-            colorSaturations.clear()
-            colorLightnesses.clear()
+        colorPreviews.clear()
+        colorCodes.clear()
+        colorToggles.clear()
+        colorHues.clear()
+        colorSaturations.clear()
+        colorLightnesses.clear()
 
-            for widget in colorFrame.winfo_children():
-                widget.destroy()
+        for widget in colorFrame.winfo_children():
+            widget.destroy()
 
-            if (colorAmountInt > 0):
-                i = 0
-                while (i < colorAmountInt):
-                    colorCodes.append(tk.StringVar())
-                    colorToggles.append(tk.IntVar())
-                    colorHues.append(tk.StringVar())
-                    colorSaturations.append(tk.StringVar())
-                    colorLightnesses.append(tk.StringVar())
-                    
-                    ui_sections.UiSections.create_color_section(
-                        colorFrame, colorCodes[i], colorToggles[i],
-                        colorHues[i], colorSaturations[i], colorLightnesses[i]
-                    )
-                    i += 1
-        except ValueError:
-            print("Generating color inputs failed")
-
-    
-    def compare():
-        try:
-            for widget in resultFrame.winfo_children():
-                widget.destroy()
-
-            if (len(colorCodes) > 0 and float(minDifToOther.get()) > 0):
-                conflictList.clear()
-                x = 0
-                y = 0
-                while (x < len(colorCodes)):
-                    while (y < len(colorCodes)):
-                        if (x != y):
-                            compareTwoColors(x, y)
-                        y += 1
-                    y = 0
-                    x += 1
+        if (colorAmountInt > 0):
+            i = 0
+            while (i < colorAmountInt):
+                colorPreviews.append(tk.StringVar())
+                colorPreviews[i].set("#ddd")
+                colorCodes.append(tk.StringVar())
+                colorToggles.append(tk.IntVar())
+                colorHues.append(tk.StringVar())
+                colorSaturations.append(tk.StringVar())
+                colorLightnesses.append(tk.StringVar())
                 
-                for conflict in conflictList:
-                    col1Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[0]))
-                    col2Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[1]))
-                    ui_sections.UiSections.create_result_section(
-                        resultFrame, windowWidth, col1Hex, col2Hex, conflict[2]
-                    )
-        except ValueError:
-            print("Generating results failed")
+                ui_sections.UiSections.create_color_section(
+                    colorFrame, colorPreviews[i], colorCodes[i], colorToggles[i],
+                    colorHues[i], colorLightnesses[i], colorSaturations[i]
+                )
+                i += 1
+    
+    def populateHexes():
+        for colorCode in colorCodes:
+            if colorCode.get() == "":
+                color = f"{random.randint(0, 0xFFFFFF):06x}"
+                colorCode.set(color)
+
+    def compare():
+        for widget in resultFrame.winfo_children():
+            widget.destroy()
+
+        if (len(colorCodes) > 0 and float(minDifToOther.get()) > 0):
+            conflictList.clear()
+            # Compare all colors and find conflicts
+            x = 0
+            y = 0
+            while (x < len(colorCodes)):
+                while (y < len(colorCodes)):
+                    if (x != y):
+                        compareTwoColors(x, y)
+                    y += 1
+                x += 1
+                # Set y so that same comparisons are not repeated.
+                y = x
+            
+            # Sort the list of conflicts
+            sortingList = []
+            for conflict in conflictList:
+                sortingList.append(conflict[3])
+            sortedConflictList = [x for _,x in sorted(zip(sortingList,conflictList))]
+            
+            # Create the list of conflicts
+            for conflict in sortedConflictList:
+                col1Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[0]))
+                col2Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[1]))
+                ui_sections.UiSections.create_result_section(
+                    resultFrame, windowWidth, col1Hex, col2Hex, conflict[2], conflict[3], conflict[4]
+                )
 
     #-------------------------------------------------
     # UI
 
-    frame1 = ttk.Frame(windowFrame.scrollable_frame)
-    frame1.pack(side='top', fill='x', padx=10, pady=(10, 0))
-    tk.Button(frame1, text="Info", command=helloWorld).pack(side='left')
-    ttk.Label(frame1, text="Amount of colors").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame1, textvariable=colorAmount, width=10).pack(side='left')
-    ttk.Label(frame1, text="White #").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame1, textvariable=stringVar1).pack(side='left')
-    ttk.Label(frame1, text="Black #").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame1, textvariable=stringVar1).pack(side='left')
-    tk.Button(frame1, text="Update", command=createColorInputs).pack(side='left', padx=(10, 0))
-    #ttk.Combobox(frame1 , state="readonly", values=["Python", "C", "C++", "Java"]).pack() 
+    infoFrame = ttk.Frame(windowFrame.scrollable_frame)
+    infoFrame.pack(side='top', fill='x', padx=10, pady=(10, 0))
+    tk.Button(infoFrame, text="Info", command=helloWorld).pack(side='left')
 
     textFrame1 = ttk.Frame(windowFrame.scrollable_frame)
     textFrame1.pack(side='top', fill='x', padx=10, pady=(5, 0))
     ttk.Label(textFrame1, text="--- Colors ---", style='Header.TLabel').pack(side='left')
 
+    frame1 = ttk.Frame(windowFrame.scrollable_frame)
+    frame1.pack(side='top', fill='x', padx=10, pady=(10, 0))
+    ttk.Label(frame1, text="Amount of colors").pack(side='left')
+    ttk.Entry(frame1, textvariable=colorAmount, width=10).pack(side='left')
+    tk.Button(frame1, text="Reset", command=createColorInputs).pack(side='left', padx=(10, 0))
+    tk.Button(frame1, text="Populate", command=populateHexes).pack(side='left', padx=(10, 0))
+    ttk.Label(frame1, text="White #").pack(side='left', padx=(10, 0))
+    ttk.Entry(frame1, textvariable=testStringVar1).pack(side='left')
+    ttk.Label(frame1, text="Black #").pack(side='left', padx=(10, 0))
+    ttk.Entry(frame1, textvariable=testStringVar1).pack(side='left')
+    #ttk.Combobox(frame1 , state="readonly", values=["Python", "C", "C++", "Java"]).pack() 
+
     colorFrame = ttk.Frame(windowFrame.scrollable_frame)
-    ttk.Label(colorFrame, text="// Define the amount of colors and press the Update-button.").pack(side='left', padx=(10, 0))
     colorFrame.pack(side='top', fill='x')
 
     textFrame2 = ttk.Frame(windowFrame.scrollable_frame)
@@ -233,16 +253,16 @@ def main():
     ttk.Label(frame2, text="Min difference to other (0-1)").pack(side='left')
     ttk.Entry(frame2, textvariable=minDifToOther, width=10).pack(side='left')
     ttk.Label(frame2, text="Min difference to white (0-1)").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame2, textvariable=stringVar1, width=10).pack(side='left')
+    ttk.Entry(frame2, textvariable=testStringVar1, width=10).pack(side='left')
     ttk.Label(frame2, text="Min difference to black (0-1)").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame2, textvariable=stringVar1, width=10).pack(side='left')
+    ttk.Entry(frame2, textvariable=testStringVar1, width=10).pack(side='left')
 
     frame3 = ttk.Frame(windowFrame.scrollable_frame)
     frame3.pack(side='top', fill='x', padx=10, pady=(5, 0))
     tk.Checkbutton(frame3, text="Ordinary",variable=compareOrd, onvalue=1, offvalue=0).pack(side='left')
-    tk.Checkbutton(frame3, text="Monochromatism",variable=compareMono, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
-    tk.Checkbutton(frame3, text="Dichromatism",variable=compareDi, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
-    tk.Checkbutton(frame3, text="Anomalous Trichromatism",variable=compareTri, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text="Protanopia",variable=compareMono, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text="Deutranopia",variable=compareDi, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text="Tritanopia",variable=compareTri, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
 
     frame4 = ttk.Frame(windowFrame.scrollable_frame)
     frame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
@@ -261,5 +281,7 @@ def main():
 
     #-------------------------------------------------
     # END
+
+    createColorInputs()
 
     root.mainloop()
