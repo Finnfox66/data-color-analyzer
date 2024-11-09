@@ -22,6 +22,8 @@ def hex_to_rgb(hex):
     Converts a hex into rgb.
     :param hex_code: Color hex code without a hashtag.
     """
+    if len(hex) == 3:
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
     return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
     # TODO Check if these returns normalized or unnormalized rgb
 

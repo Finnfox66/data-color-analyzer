@@ -49,9 +49,9 @@ class UiSections():
         col2_hex = "#" + col2_hex
         value_text = f"{value}"
         value_col_text = f"#{value_col}"
-        resultFrame = ttk.Frame(frame)
-        resultFrame.pack(side='top', fill='x', pady=(5, 0))
-        canvas = tk.Canvas(resultFrame, width=window_width, height=60, bg='#ddd')
+        result_frame = ttk.Frame(frame)
+        result_frame.pack(side='top', fill='x', pady=(5, 0))
+        canvas = tk.Canvas(result_frame, width=window_width, height=60, bg='#ddd')
         canvas.create_rectangle(10, 0, 70, 60, fill=col1_hex, width=0)
         canvas.create_rectangle(80, 0, 140, 60, fill=col2_hex, width=0)
         canvas.create_text(150, 24, text=text1, fill="black", font=('Segoe_UI 9 bold'), anchor=tk.NW)

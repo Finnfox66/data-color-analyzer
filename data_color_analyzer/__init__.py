@@ -12,7 +12,7 @@ from data_color_analyzer.color_pipeline import ColorPipeline
 from data_color_analyzer.color_generator import ColorGenerator
 
 def helloWorld():
-    print ("Hello world")
+    print ('Hello world')
 
 def generate():
     if len(sys.argv) <= 2:
@@ -42,7 +42,7 @@ def generate():
     colors = color_generator.generate_colors(normalized_colors, generate_count)
 
 def main():
-    colorPipeline = ColorPipeline('Schmitz2015', 'ciede2000')
+    color_pipeline = ColorPipeline('Schmitz2015', 'ciede2000')
 
     #-------------------------------------------------
     # WINDOW
@@ -52,38 +52,44 @@ def main():
     root.option_add('*tearOff', False) # This is always a good idea
     root.resizable(False, False) # the scrollable frame will look weird when resizing the window
 
-    windowWidth = 800
-    windowHeight = 600
-    windowFrame = scrollframe.ScrollableFrame(root, width = windowWidth, height = windowHeight)
-    windowFrame.pack()
+    window_width = 800
+    window_height = 600
+    window_frame = scrollframe.ScrollableFrame(root, width = window_width, height = window_height)
+    window_frame.pack()
 
     #-------------------------------------------------
     # CONTROL VARIABLES
 
-    testStringVar1 = tk.StringVar()
+    color_amount = tk.StringVar()
+    color_amount.set('5')
 
-    colorAmount = tk.StringVar()
-    colorAmount.set("5")
+    color_white = tk.StringVar()
+    color_white.set('ffffff')
+    color_black = tk.StringVar()
+    color_black.set('000000')
 
-    colorPreviews = []
-    colorCodes = []
-    colorToggles = []
-    colorHues = []
-    colorLightnesses = []
-    colorSaturations = []
+    color_previews = []
+    color_codes = []
+    color_toggles = []
+    color_hues = []
+    color_lightnesses = []
+    color_saturations = []
 
-    minDifToOther = tk.StringVar()
-    minDifToOther.set("0.15")
+    min_dif = tk.StringVar()
+    min_dif.set('0.15')
+    min_dif_to_white = tk.StringVar()
+    min_dif_to_black = tk.StringVar()
 
-    compareOrd = tk.IntVar()
-    compareOrd.set("1")
-    compareMono= tk.IntVar()
-    compareMono.set("1")
-    compareDi = tk.IntVar()
-    compareTri = tk.IntVar()
+    compare_ord = tk.IntVar()
+    compare_ord.set('1')
+    compare_mono= tk.IntVar()
+    compare_mono.set('1')
+    compare_di = tk.IntVar()
+    compare_tri = tk.IntVar()
 
     # index 1, index 2, conflict text
-    conflictList = []
+    conflict_list = []
+    failure_list = []
 
     #-------------------------------------------------
     # STYLE
@@ -96,192 +102,226 @@ def main():
     #-------------------------------------------------
     # COMPARISON CALC (maybe separate to another file)
 
-    def getRgbFromId(colorId):
-        if (colorToggles[colorId].get()):
+    def get_rgb_from_id(color_id):
+        if (color_toggles[color_id].get()):
             # hsl
-            # TODO CHECK IF NONE OF THESE IS ""
-            h = float(colorHues[colorId].get())
-            l = float(colorLightnesses[colorId].get())
-            s = float(colorSaturations[colorId].get())
+            # TODO CHECK IF NONE OF THESE IS ''
+            h = float(color_hues[color_id].get())
+            l = float(color_lightnesses[color_id].get())
+            s = float(color_saturations[color_id].get())
             hls = [h, l, s]
             return colorconvert.hls_to_rgb(hls)
         else:
             #hex
-            # TODO CHECK IF NONE OF THESE IS ""
-            return colorconvert.hex_to_rgb(colorCodes[colorId].get())
+            # TODO CHECK IF NONE OF THESE IS ''
+            return colorconvert.hex_to_rgb(color_codes[color_id].get())
     
-    def singleComparison(mon, di, tri, c1NormRgb, c2NormRgb):
-        colorPipeline.set_color_blindness_levels(mon, di, tri)
-        result = colorPipeline.get_color_difference(
-            (c1NormRgb[0], c1NormRgb[1], c1NormRgb[2]),
-            (c2NormRgb[0], c2NormRgb[1], c2NormRgb[2])
+    def single_comparison(mon, di, tri, c1_norm_rgb, c2_norm_rgb):
+        color_pipeline.set_color_blindness_levels(mon, di, tri)
+        result = color_pipeline.get_color_difference(
+            (c1_norm_rgb[0], c1_norm_rgb[1], c1_norm_rgb[2]),
+            (c2_norm_rgb[0], c2_norm_rgb[1], c2_norm_rgb[2])
         )
         result = round(result, 2)
         return result
 
-    def compareTwoColors(id1, id2):
-        c1NormRgb = colorconvert.normalize_rgb(getRgbFromId(id1))
-        c2NormRgb = colorconvert.normalize_rgb(getRgbFromId(id2))
-        limit = float(minDifToOther.get())
+    def compare_two_colors(id1, id2):
+        try:
+            c1_norm_rgb = colorconvert.normalize_rgb(get_rgb_from_id(id1))
+            # Handle white and black separately from colors
+            c2_norm_rgb = None
+            if id2 == -1:
+                white_rgb = colorconvert.hex_to_rgb(color_white.get())
+                c2_norm_rgb = colorconvert.normalize_rgb(white_rgb)
+            elif id2 == -2:
+                black_rgb = colorconvert.hex_to_rgb(color_black.get())
+                c2_norm_rgb = colorconvert.normalize_rgb(black_rgb)
+            else:
 
-        if (compareOrd.get() == 1):
-            result = singleComparison(0, 0, 0, c1NormRgb, c2NormRgb)
-            if (result < limit):
-                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                conflictList.append([id1, id2, f"-", result, result_text_col])
-        if (compareMono.get() == 1):
-            result = singleComparison(1, 0, 0, c1NormRgb, c2NormRgb)
-            if (result < limit):
-                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                conflictList.append([id1, id2, f"Protanopia", result, result_text_col])
-        if (compareDi.get() == 1):
-            result = singleComparison(0, 1, 0, c1NormRgb, c2NormRgb)
-            if (result < limit):
-                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                conflictList.append([id1, id2, f"Deutranopia", result, result_text_col])
-        if (compareTri.get() == 1):
-            result = singleComparison(0, 0, 1, c1NormRgb, c2NormRgb)
-            if (result < limit):
-                result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                conflictList.append([id1, id2, f"Tritanopia", result, result_text_col])
+                c2_norm_rgb = colorconvert.normalize_rgb(get_rgb_from_id(id2))
+            limit = float(min_dif.get())
+            # Use white and black specific difference limits if those are set
+            if id2 == -1 and min_dif_to_white.get() != '':
+                limit = float(min_dif_to_white.get())
+            if id2 == -2 and min_dif_to_black.get() != '':
+                limit = float(min_dif_to_black.get())
+
+            if (compare_ord.get() == 1):
+                result = single_comparison(0, 0, 0, c1_norm_rgb, c2_norm_rgb)
+                if (result < limit):
+                    result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                    conflict_list.append([id1, id2, f'-', result, result_text_col])
+            if (compare_mono.get() == 1):
+                result = single_comparison(1, 0, 0, c1_norm_rgb, c2_norm_rgb)
+                if (result < limit):
+                    result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                    # TODO function that provides the color code also for the color blindness versions
+                    conflict_list.append([id1, id2, f'Protanopia', result, result_text_col])
+            if (compare_di.get() == 1):
+                result = single_comparison(0, 1, 0, c1_norm_rgb, c2_norm_rgb)
+                if (result < limit):
+                    result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                    conflict_list.append([id1, id2, f'Deutranopia', result, result_text_col])
+            if (compare_tri.get() == 1):
+                result = single_comparison(0, 0, 1, c1_norm_rgb, c2_norm_rgb)
+                if (result < limit):
+                    result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
+                    conflict_list.append([id1, id2, f'Tritanopia', result, result_text_col])
+        except:
+            failure_list.append([id1,id2])
 
     #-------------------------------------------------
     # UI BUILD FUNCTIONS (maybe separate to another file)
 
-    def createColorInputs():
+    def create_color_inputs():
         # TODO Include color block for all color deficiencies
         # TODO Needs function that stores old values first and restores them from old copies after.
-        colorAmountInt = int(colorAmount.get())
+        color_amount_int = int(color_amount.get())
 
-        colorPreviews.clear()
-        colorCodes.clear()
-        colorToggles.clear()
-        colorHues.clear()
-        colorSaturations.clear()
-        colorLightnesses.clear()
+        color_previews.clear()
+        color_codes.clear()
+        color_toggles.clear()
+        color_hues.clear()
+        color_saturations.clear()
+        color_lightnesses.clear()
 
-        for widget in colorFrame.winfo_children():
+        for widget in color_frame.winfo_children():
             widget.destroy()
 
-        if (colorAmountInt > 0):
+        if (color_amount_int > 0):
             i = 0
-            while (i < colorAmountInt):
-                colorPreviews.append(tk.StringVar())
-                colorPreviews[i].set("#ddd")
-                colorCodes.append(tk.StringVar())
-                colorToggles.append(tk.IntVar())
-                colorHues.append(tk.StringVar())
-                colorSaturations.append(tk.StringVar())
-                colorLightnesses.append(tk.StringVar())
+            while (i < color_amount_int):
+                color_previews.append(tk.StringVar())
+                color_previews[i].set('#ddd')
+                color_codes.append(tk.StringVar())
+                color_toggles.append(tk.IntVar())
+                color_hues.append(tk.StringVar())
+                color_saturations.append(tk.StringVar())
+                color_lightnesses.append(tk.StringVar())
                 
                 ui_sections.UiSections.create_color_section(
-                    colorFrame, colorPreviews[i], colorCodes[i], colorToggles[i],
-                    colorHues[i], colorLightnesses[i], colorSaturations[i]
+                    color_frame, color_previews[i], color_codes[i], color_toggles[i],
+                    color_hues[i], color_lightnesses[i], color_saturations[i]
                 )
                 i += 1
     
-    def populateHexes():
-        for colorCode in colorCodes:
-            if colorCode.get() == "":
-                color = f"{random.randint(0, 0xFFFFFF):06x}"
-                colorCode.set(color)
+    def populate_hexes():
+        for color_code in color_codes:
+            if color_code.get() == '':
+                color = f'{random.randint(0, 0xFFFFFF):06x}'
+                color_code.set(color)
 
     def compare():
-        for widget in resultFrame.winfo_children():
+        for widget in result_frame.winfo_children():
             widget.destroy()
 
-        if (len(colorCodes) > 0 and float(minDifToOther.get()) > 0):
-            conflictList.clear()
+        if (len(color_codes) > 0 and float(min_dif.get()) > 0):
+            conflict_list.clear()
+            failure_list.clear()
             # Compare all colors and find conflicts
             x = 0
             y = 0
-            while (x < len(colorCodes)):
-                while (y < len(colorCodes)):
+            while (x < len(color_codes)):
+                while (y < len(color_codes)):
                     if (x != y):
-                        compareTwoColors(x, y)
+                        compare_two_colors(x, y)
                     y += 1
+                compare_two_colors(x, -1)
+                compare_two_colors(x, -2)
                 x += 1
                 # Set y so that same comparisons are not repeated.
                 y = x
             
             # Sort the list of conflicts
-            sortingList = []
-            for conflict in conflictList:
-                sortingList.append(conflict[3])
-            sortedConflictList = [x for _,x in sorted(zip(sortingList,conflictList))]
+            sorting_list = []
+            for conflict in conflict_list:
+                sorting_list.append(conflict[3])
+            sorted_conflict_list = [x for _,x in sorted(zip(sorting_list,conflict_list))]
             
             # Create the list of conflicts
-            for conflict in sortedConflictList:
-                col1Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[0]))
-                col2Hex = colorconvert.rgb_to_hex(getRgbFromId(conflict[1]))
+            for conflict in sorted_conflict_list:
+                col1_hex = colorconvert.rgb_to_hex(get_rgb_from_id(conflict[0]))
+                # Handle white and black separately from colors
+                col2_hex = None
+                if conflict[1] == -1:
+                    col2_hex = color_white.get()
+                elif conflict[1] == -2:
+                    col2_hex = color_black.get()
+                else:
+                    col2_hex = colorconvert.rgb_to_hex(get_rgb_from_id(conflict[1]))
                 ui_sections.UiSections.create_result_section(
-                    resultFrame, windowWidth, col1Hex, col2Hex, conflict[2], conflict[3], conflict[4]
+                    result_frame, window_width, col1_hex, col2_hex, conflict[2], conflict[3], conflict[4]
                 )
+            
+            # Print failed comparisons
+            if failure_list != []:
+                print(f'List of failed comparisons: {failure_list}')
 
     #-------------------------------------------------
     # UI
 
-    infoFrame = ttk.Frame(windowFrame.scrollable_frame)
-    infoFrame.pack(side='top', fill='x', padx=10, pady=(10, 0))
-    tk.Button(infoFrame, text="Info", command=helloWorld).pack(side='left')
+    #infoFrame = ttk.Frame(windowFrame.scrollable_frame)
+    #infoFrame.pack(side='top', fill='x', padx=10, pady=(10, 0))
+    #tk.OptionMenu(infoFrame, algorithm, 'Vienot1999', 'Schmitz2015').pack(side='left')
+    #tk.Button(infoFrame, text='Info', command=helloWorld).pack(side='left')
 
-    textFrame1 = ttk.Frame(windowFrame.scrollable_frame)
-    textFrame1.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(textFrame1, text="--- Colors ---", style='Header.TLabel').pack(side='left')
+    text_frame1 = ttk.Frame(window_frame.scrollable_frame)
+    text_frame1.pack(side='top', fill='x', padx=10, pady=(5, 0))
+    ttk.Label(text_frame1, text='--- Colors ---', style='Header.TLabel').pack(side='left')
 
-    frame1 = ttk.Frame(windowFrame.scrollable_frame)
+    frame1 = ttk.Frame(window_frame.scrollable_frame)
     frame1.pack(side='top', fill='x', padx=10, pady=(10, 0))
-    ttk.Label(frame1, text="Amount of colors").pack(side='left')
-    ttk.Entry(frame1, textvariable=colorAmount, width=10).pack(side='left')
-    tk.Button(frame1, text="Reset", command=createColorInputs).pack(side='left', padx=(10, 0))
-    tk.Button(frame1, text="Populate", command=populateHexes).pack(side='left', padx=(10, 0))
-    ttk.Label(frame1, text="White #").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame1, textvariable=testStringVar1).pack(side='left')
-    ttk.Label(frame1, text="Black #").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame1, textvariable=testStringVar1).pack(side='left')
-    #ttk.Combobox(frame1 , state="readonly", values=["Python", "C", "C++", "Java"]).pack() 
+    ttk.Label(frame1, text='Amount of colors').pack(side='left')
+    ttk.Entry(frame1, textvariable=color_amount, width=10).pack(side='left')
+    tk.Button(frame1, text='Reset', command=create_color_inputs).pack(side='left', padx=(10, 0))
+    tk.Button(frame1, text='Populate', command=populate_hexes).pack(side='left', padx=(10, 0))
+    ttk.Label(frame1, text='White #').pack(side='left', padx=(10, 0))
+    ttk.Entry(frame1, textvariable=color_white).pack(side='left')
+    ttk.Label(frame1, text='Black #').pack(side='left', padx=(10, 0))
+    ttk.Entry(frame1, textvariable=color_black).pack(side='left')
+    #ttk.Combobox(frame1 , state='readonly', values=['Python', 'C', 'C++', 'Java']).pack() 
 
-    colorFrame = ttk.Frame(windowFrame.scrollable_frame)
-    colorFrame.pack(side='top', fill='x')
+    color_frame = ttk.Frame(window_frame.scrollable_frame)
+    color_frame.pack(side='top', fill='x')
 
-    textFrame2 = ttk.Frame(windowFrame.scrollable_frame)
-    textFrame2.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(textFrame2, text="--- Comparisons ---", style='Header.TLabel').pack(side='left')
+    text_frame2 = ttk.Frame(window_frame.scrollable_frame)
+    text_frame2.pack(side='top', fill='x', padx=10, pady=(5, 0))
+    ttk.Label(text_frame2, text='--- Comparisons ---', style='Header.TLabel').pack(side='left')
 
-    frame2 = ttk.Frame(windowFrame.scrollable_frame)
+    frame2 = ttk.Frame(window_frame.scrollable_frame)
     frame2.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(frame2, text="Min difference to other (0-1)").pack(side='left')
-    ttk.Entry(frame2, textvariable=minDifToOther, width=10).pack(side='left')
-    ttk.Label(frame2, text="Min difference to white (0-1)").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame2, textvariable=testStringVar1, width=10).pack(side='left')
-    ttk.Label(frame2, text="Min difference to black (0-1)").pack(side='left', padx=(10, 0))
-    ttk.Entry(frame2, textvariable=testStringVar1, width=10).pack(side='left')
+    ttk.Label(frame2, text='Min difference (0-1)').pack(side='left')
+    ttk.Entry(frame2, textvariable=min_dif, width=10).pack(side='left')
+    ttk.Label(frame2, text='Min difference to white (0-1)').pack(side='left', padx=(10, 0))
+    ttk.Entry(frame2, textvariable=min_dif_to_white, width=10).pack(side='left')
+    ttk.Label(frame2, text='Min difference to black (0-1)').pack(side='left', padx=(10, 0))
+    ttk.Entry(frame2, textvariable=min_dif_to_black, width=10).pack(side='left')
 
-    frame3 = ttk.Frame(windowFrame.scrollable_frame)
+    frame3 = ttk.Frame(window_frame.scrollable_frame)
     frame3.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    tk.Checkbutton(frame3, text="Ordinary",variable=compareOrd, onvalue=1, offvalue=0).pack(side='left')
-    tk.Checkbutton(frame3, text="Protanopia",variable=compareMono, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
-    tk.Checkbutton(frame3, text="Deutranopia",variable=compareDi, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
-    tk.Checkbutton(frame3, text="Tritanopia",variable=compareTri, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text='Ordinary',variable=compare_ord, onvalue=1, offvalue=0).pack(side='left')
+    tk.Checkbutton(frame3, text='Protanopia',variable=compare_mono, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text='Deutranopia',variable=compare_di, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
+    tk.Checkbutton(frame3, text='Tritanopia',variable=compare_tri, onvalue=1, offvalue=0).pack(side='left', padx=(10, 0))
 
-    frame4 = ttk.Frame(windowFrame.scrollable_frame)
+    frame4 = ttk.Frame(window_frame.scrollable_frame)
     frame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    tk.Button(frame4, text="Review", command=compare).pack(side='left')
+    tk.Button(frame4, text='Review', command=compare).pack(side='left')
 
-    textFrame3 = ttk.Frame(windowFrame.scrollable_frame)
-    textFrame3.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(textFrame3, text="--- Results ---", style='Header.TLabel').pack(side='left')
+    text_frame3 = ttk.Frame(window_frame.scrollable_frame)
+    text_frame3.pack(side='top', fill='x', padx=10, pady=(5, 0))
+    ttk.Label(text_frame3, text='--- Results ---', style='Header.TLabel').pack(side='left')
 
-    textFrame4 = ttk.Frame(windowFrame.scrollable_frame)
-    textFrame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(textFrame4, text="Overall score: 0.0, Highest: 0.0, Lowest: 0.0").pack(side='left')
+    text_frame4 = ttk.Frame(window_frame.scrollable_frame)
+    text_frame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
+    ttk.Label(text_frame4, text='Overall score: 0.0, Highest: 0.0, Lowest: 0.0').pack(side='left')
 
-    resultFrame = ttk.Frame(windowFrame.scrollable_frame)
-    resultFrame.pack(side='top', fill='x')
+    result_frame = ttk.Frame(window_frame.scrollable_frame)
+    result_frame.pack(side='top', fill='x')
 
     #-------------------------------------------------
     # END
 
-    createColorInputs()
+    create_color_inputs()
 
     root.mainloop()
