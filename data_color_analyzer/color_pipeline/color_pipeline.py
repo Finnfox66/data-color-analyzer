@@ -43,20 +43,27 @@ class ColorPipeline:
         :param a: The first color as (r, g, b) with values [0, 1].
         :param b: The second color as (r, g, b) with values [0, 1].
         """
-        a_rgb = np.array(a)
-        b_rgb = np.array(b)
-
-        # Colors in LMS color space
-        a_lms = np.matmul(a_rgb, self.color_blindness.rgb_to_lms())
-        b_lms = np.matmul(b_rgb, self.color_blindness.rgb_to_lms())
-
-        # Colors converted to the color blindness scale
-        a_conv = np.matmul(a_lms, self.conversion_matrix)
-        b_conv = np.matmul(b_lms, self.conversion_matrix)
-
-        # Fully simulated colors back in the RGB color space
-        a_sim = np.matmul(a_conv, self.color_blindness.lms_to_rgb())
-        b_sim = np.matmul(b_conv, self.color_blindness.lms_to_rgb())
+        a_sim = self.get_simulated_color(a)
+        b_sim = self.get_simulated_color(b)
 
         diff = self.perceived_diff.get_color_difference(tuple(a_sim), tuple(b_sim))
         return diff
+
+
+
+    def get_simulated_color(self, a: tuple[float, float, float]) -> float:
+        """
+        Get a version of a given color with the simulated color blindness levels.
+
+        :param a: The color as (r, g, b) with values [0, 1].
+        """
+        rgb = np.array(a)
+
+        # Color in LMS color space
+        lms = np.matmul(rgb, self.color_blindness.rgb_to_lms())
+
+        # Color converted to the color blindness scale
+        conv = np.matmul(lms, self.conversion_matrix)
+
+        # Fully simulated color back in the RGB color space
+        return np.matmul(conv, self.color_blindness.lms_to_rgb())
