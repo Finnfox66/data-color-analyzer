@@ -43,10 +43,12 @@ class UiSections():
         lightness.trace_add('write', update_col_block)
         saturation.trace_add('write', update_col_block)
     
-    def create_result_section(frame, window_width, col1_hex, col2_hex, text1, value, value_col):
+    def create_result_section(frame, window_width, col1_hex, col2_hex, col1_sim_hex, col2_sim_hex, text1, value, value_col):
         # TODO add color IDs here.
         col1_hex = "#" + col1_hex
         col2_hex = "#" + col2_hex
+        col1_sim_hex = "#" + col1_sim_hex
+        col2_sim_hex = "#" + col2_sim_hex
         value_text = f"{value}"
         value_col_text = f"#{value_col}"
         result_frame = ttk.Frame(frame)
@@ -54,6 +56,8 @@ class UiSections():
         canvas = tk.Canvas(result_frame, width=window_width, height=60, bg='#ddd')
         canvas.create_rectangle(10, 0, 70, 60, fill=col1_hex, width=0)
         canvas.create_rectangle(80, 0, 140, 60, fill=col2_hex, width=0)
-        canvas.create_text(150, 24, text=text1, fill="black", font=('Segoe_UI 9 bold'), anchor=tk.NW)
-        canvas.create_text(280, 24, text=value_text, fill=value_col_text, font=('Segoe_UI 9 bold'), anchor=tk.NW)
+        canvas.create_rectangle(160, 0, 220, 60, fill=col1_sim_hex, width=0)
+        canvas.create_rectangle(230, 0, 290, 60, fill=col2_sim_hex, width=0)
+        canvas.create_text(310, 24, text=text1, fill="black", font=('Segoe_UI 9 bold'), anchor=tk.NW)
+        canvas.create_text(420, 24, text=value_text, fill=value_col_text, font=('Segoe_UI 9 bold'), anchor=tk.NW)
         canvas.pack(side='left')

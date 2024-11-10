@@ -150,23 +150,23 @@ def main():
                 result = single_comparison(0, 0, 0, c1_norm_rgb, c2_norm_rgb)
                 if (result < limit):
                     result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                    conflict_list.append([id1, id2, f'-', result, result_text_col])
+                    # The last number is the color blindness mode as a number
+                    conflict_list.append([id1, id2, f'-', result, result_text_col, 0])
             if (compare_mono.get() == 1):
                 result = single_comparison(1, 0, 0, c1_norm_rgb, c2_norm_rgb)
                 if (result < limit):
                     result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                    # TODO function that provides the color code also for the color blindness versions
-                    conflict_list.append([id1, id2, f'Protanopia', result, result_text_col])
+                    conflict_list.append([id1, id2, f'Protanopia', result, result_text_col, 1])
             if (compare_di.get() == 1):
                 result = single_comparison(0, 1, 0, c1_norm_rgb, c2_norm_rgb)
                 if (result < limit):
                     result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                    conflict_list.append([id1, id2, f'Deutranopia', result, result_text_col])
+                    conflict_list.append([id1, id2, f'Deutranopia', result, result_text_col, 2])
             if (compare_tri.get() == 1):
                 result = single_comparison(0, 0, 1, c1_norm_rgb, c2_norm_rgb)
                 if (result < limit):
                     result_text_col = colorconvert.convert_val_to_col_scale(result, 0, limit)
-                    conflict_list.append([id1, id2, f'Tritanopia', result, result_text_col])
+                    conflict_list.append([id1, id2, f'Tritanopia', result, result_text_col, 3])
         except:
             failure_list.append([id1,id2])
 
@@ -249,8 +249,13 @@ def main():
                     col2_hex = color_black.get()
                 else:
                     col2_hex = colorconvert.rgb_to_hex(get_rgb_from_id(conflict[1]))
+                # Include color blind versions of hexes
+                col1_sim_hex = colorconvert.hex_to_color_blindness_hex(col1_hex, conflict[5], color_pipeline)
+                col2_sim_hex = colorconvert.hex_to_color_blindness_hex(col2_hex, conflict[5], color_pipeline)
+                # Create UI section
                 ui_sections.UiSections.create_result_section(
-                    result_frame, window_width, col1_hex, col2_hex, conflict[2], conflict[3], conflict[4]
+                    result_frame, window_width, col1_hex, col2_hex,
+                    col1_sim_hex, col2_sim_hex, conflict[2], conflict[3], conflict[4]
                 )
             
             # Print failed comparisons
@@ -312,9 +317,9 @@ def main():
     text_frame3.pack(side='top', fill='x', padx=10, pady=(5, 0))
     ttk.Label(text_frame3, text='--- Results ---', style='Header.TLabel').pack(side='left')
 
-    text_frame4 = ttk.Frame(window_frame.scrollable_frame)
-    text_frame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
-    ttk.Label(text_frame4, text='Overall score: 0.0, Highest: 0.0, Lowest: 0.0').pack(side='left')
+    #text_frame4 = ttk.Frame(window_frame.scrollable_frame)
+    #text_frame4.pack(side='top', fill='x', padx=10, pady=(5, 0))
+    #ttk.Label(text_frame4, text='Overall score: 0.0, Highest: 0.0, Lowest: 0.0').pack(side='left')
 
     result_frame = ttk.Frame(window_frame.scrollable_frame)
     result_frame.pack(side='top', fill='x')

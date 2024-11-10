@@ -1,4 +1,5 @@
 import colorsys as cs
+from data_color_analyzer.color_pipeline import ColorPipeline
 
 def normalize_rgb(rgb):
     normalized_rgb = [rgb[0]/255, rgb[1]/255, rgb[2]/255]
@@ -32,6 +33,23 @@ def rgb_to_hex(rgb):
     Converts a rgb into hex without a hashtag.
     """
     return '{:02x}{:02x}{:02x}'.format(int(rgb[0]), int(rgb[1]), int(rgb[2]))
+
+def hex_to_color_blindness_hex(hex, blindness_id, color_pipeline):
+    match blindness_id:
+        case 0:
+            color_pipeline.set_color_blindness_levels(0, 0, 0)
+        case 1:
+            color_pipeline.set_color_blindness_levels(1, 0, 0)
+        case 2:
+            color_pipeline.set_color_blindness_levels(0, 1, 0)
+        case 3:
+            color_pipeline.set_color_blindness_levels(0, 0, 1)
+    rgb = hex_to_rgb(hex)
+    rgb = normalize_rgb(rgb)
+    sim_color = color_pipeline.get_simulated_color((rgb[0], rgb[1], rgb[2]))
+    denormalized_sim_color = denormalize_rgb(sim_color)
+    hex = rgb_to_hex(denormalized_sim_color)
+    return hex
 
 def rgb_to_hls(rgb):
     rgb = normalize_rgb(rgb)
